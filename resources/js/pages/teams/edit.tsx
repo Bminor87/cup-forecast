@@ -26,11 +26,16 @@ import {
 } from '@/components/ui/tooltip';
 import { useInitials } from '@/hooks/use-initials';
 import { edit, index, update } from '@/routes/teams';
+import teamMatchesRoutes from '@/routes/teams/matches';
 import { update as updateMember } from '@/routes/teams/members';
+import tournamentTeamsRoutes from '@/routes/teams/tournament-teams';
 import type {
     RoleOption,
     Team,
     TeamInvitation,
+    TournamentMatch,
+    TournamentOption,
+    TournamentTeam,
     TeamMember,
     TeamPermissions,
 } from '@/types';
@@ -39,6 +44,12 @@ type Props = {
     team: Team;
     members: TeamMember[];
     invitations: TeamInvitation[];
+    tournamentTeams: TournamentTeam[];
+    matches: TournamentMatch[];
+    teamTypes: TournamentOption[];
+    matchStatuses: TournamentOption[];
+    canManageTournamentTeams: boolean;
+    canManageMatches: boolean;
     permissions: TeamPermissions;
     availableRoles: RoleOption[];
 };
@@ -47,6 +58,12 @@ export default function TeamEdit({
     team,
     members,
     invitations,
+    tournamentTeams,
+    matches,
+    teamTypes,
+    matchStatuses,
+    canManageTournamentTeams,
+    canManageMatches,
     permissions,
     availableRoles,
 }: Props) {
@@ -86,6 +103,21 @@ export default function TeamEdit({
     const confirmCancelInvitation = (invitation: TeamInvitation) => {
         setInvitationToCancel(invitation);
         setCancelInvitationDialogOpen(true);
+    };
+
+    const tournamentTeamsStoreUrl = tournamentTeamsRoutes.store.url(team.slug);
+    const matchesStoreUrl = teamMatchesRoutes.store.url(team.slug);
+
+    const deleteTournamentTeam = (tournamentTeamId: number) => {
+        router.delete(tournamentTeamsRoutes.destroy.url([team.slug, tournamentTeamId]), {
+            preserveScroll: true,
+        });
+    };
+
+    const deleteMatch = (matchId: number) => {
+        router.delete(teamMatchesRoutes.destroy.url([team.slug, matchId]), {
+            preserveScroll: true,
+        });
     };
 
     return (
@@ -142,6 +174,204 @@ export default function TeamEdit({
                             <Heading variant="small" title={team.name} />
                         </>
                     )}
+                </div>
+
+                <div className="space-y-6">
+                    <Heading
+                        variant="small"
+                        title="Tournament teams"
+                        description="Manage competing teams inside this tournament"
+                    />
+
+                    {canManageTournamentTeams ? (
+                        <Form action={tournamentTeamsStoreUrl} method="post" className="grid gap-4 md:grid-cols-4">
+                            {({ errors, processing }) => (
+                                <>
+                                    <div className="grid gap-2 md:col-span-2">
+                                        <Label htmlFor="tournament-team-name">Team name</Label>
+                                        <Input id="tournament-team-name" name="name" required data-test="tournament-team-name-input" />
+                                        <InputError message={errors.name} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="tournament-team-short-name">Short name</Label>
+                                        <Input id="tournament-team-short-name" name="short_name" maxLength={16} data-test="tournament-team-short-name-input" />
+                                        <InputError message={errors.short_name} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="tournament-team-type">Type</Label>
+                                        <select
+                                            id="tournament-team-type"
+                                            name="type"
+                                            className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs md:text-sm"
+                                            defaultValue={teamTypes[0]?.value}
+                                            data-test="tournament-team-type-input"
+                                        >
+                                            {teamTypes.map((type) => (
+                                                <option key={type.value} value={type.value}>
+                                                    {type.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.type} />
+                                    </div>
+
+                                    <div className="md:col-span-4">
+                                        <Button type="submit" disabled={processing} data-test="tournament-team-create-button">
+                                            Add tournament team
+                                        </Button>
+                                    </div>
+                                </>
+                            )}
+                        </Form>
+                    ) : null}
+
+                    <div className="space-y-3">
+                        {tournamentTeams.map((tournamentTeam) => (
+                            <div key={tournamentTeam.id} className="flex items-center justify-between rounded-lg border p-4" data-test="tournament-team-row">
+                                <div>
+                                    <div className="font-medium">{tournamentTeam.name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {tournamentTeam.type_label}
+                                        {tournamentTeam.short_name ? ` • ${tournamentTeam.short_name}` : ''}
+                                    </div>
+                                </div>
+
+                                {canManageTournamentTeams ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteTournamentTeam(tournamentTeam.id)}
+                                        data-test="tournament-team-delete-button"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                ) : null}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <Heading
+                        variant="small"
+                        title="Matches"
+                        description="Create and manage tournament fixtures"
+                    />
+
+                    {canManageMatches && tournamentTeams.length >= 2 ? (
+                        <Form action={matchesStoreUrl} method="post" className="grid gap-4 md:grid-cols-3">
+                            {({ errors, processing }) => (
+                                <>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="home-team">Home team</Label>
+                                        <select
+                                            id="home-team"
+                                            name="home_tournament_team_id"
+                                            className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs md:text-sm"
+                                            defaultValue={tournamentTeams[0]?.id}
+                                            data-test="match-home-team-input"
+                                        >
+                                            {tournamentTeams.map((tournamentTeam) => (
+                                                <option key={tournamentTeam.id} value={tournamentTeam.id}>
+                                                    {tournamentTeam.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.home_tournament_team_id} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="away-team">Away team</Label>
+                                        <select
+                                            id="away-team"
+                                            name="away_tournament_team_id"
+                                            className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs md:text-sm"
+                                            defaultValue={tournamentTeams[1]?.id ?? tournamentTeams[0]?.id}
+                                            data-test="match-away-team-input"
+                                        >
+                                            {tournamentTeams.map((tournamentTeam) => (
+                                                <option key={tournamentTeam.id} value={tournamentTeam.id}>
+                                                    {tournamentTeam.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.away_tournament_team_id} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="match-status">Status</Label>
+                                        <select
+                                            id="match-status"
+                                            name="status"
+                                            className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs md:text-sm"
+                                            defaultValue="scheduled"
+                                            data-test="match-status-input"
+                                        >
+                                            {matchStatuses.map((status) => (
+                                                <option key={status.value} value={status.value}>
+                                                    {status.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError message={errors.status} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="starts-at">Starts at</Label>
+                                        <Input id="starts-at" name="starts_at" type="datetime-local" required data-test="match-starts-at-input" />
+                                        <InputError message={errors.starts_at} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="locks-at">Locks at</Label>
+                                        <Input id="locks-at" name="locks_at" type="datetime-local" data-test="match-locks-at-input" />
+                                        <InputError message={errors.locks_at} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="venue">Venue</Label>
+                                        <Input id="venue" name="venue" data-test="match-venue-input" />
+                                        <InputError message={errors.venue} />
+                                    </div>
+
+                                    <div className="md:col-span-3">
+                                        <Button type="submit" disabled={processing} data-test="match-create-button">
+                                            Add match
+                                        </Button>
+                                    </div>
+                                </>
+                            )}
+                        </Form>
+                    ) : null}
+
+                    <div className="space-y-3">
+                        {matches.map((match) => (
+                            <div key={match.id} className="flex items-center justify-between rounded-lg border p-4" data-test="match-row">
+                                <div>
+                                    <div className="font-medium">
+                                        {match.home_team_name} vs {match.away_team_name}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                        {new Date(match.starts_at).toLocaleString()} • {match.status_label}
+                                        {match.venue ? ` • ${match.venue}` : ''}
+                                    </div>
+                                </div>
+
+                                {canManageMatches ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteMatch(match.id)}
+                                        data-test="match-delete-button"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                ) : null}
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="space-y-6">

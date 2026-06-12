@@ -24,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Tournament $tournament
  * @property-read Collection<int, Player> $players
+ * @property-read Collection<int, TournamentMatch> $homeMatches
+ * @property-read Collection<int, TournamentMatch> $awayMatches
  */
 #[Fillable(['tournament_id', 'name', 'short_name', 'type', 'external_ref', 'metadata'])]
 class TournamentTeam extends Model
@@ -64,6 +66,26 @@ class TournamentTeam extends Model
     public function players(): HasMany
     {
         return $this->hasMany(Player::class, 'tournament_team_id');
+    }
+
+    /**
+     * Get all matches where this team is the home team.
+     *
+     * @return HasMany<TournamentMatch, $this>
+     */
+    public function homeMatches(): HasMany
+    {
+        return $this->hasMany(TournamentMatch::class, 'home_tournament_team_id');
+    }
+
+    /**
+     * Get all matches where this team is the away team.
+     *
+     * @return HasMany<TournamentMatch, $this>
+     */
+    public function awayMatches(): HasMany
+    {
+        return $this->hasMany(TournamentMatch::class, 'away_tournament_team_id');
     }
 
     /**

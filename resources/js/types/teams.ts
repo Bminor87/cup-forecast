@@ -51,6 +51,41 @@ export type TeamPermissions = {
     canCancelInvitation: boolean;
 };
 
+export type TournamentTeamType = 'national' | 'club';
+
+export type TournamentTeam = {
+    id: number;
+    name: string;
+    short_name: string | null;
+    type: TournamentTeamType;
+    type_label: string;
+};
+
+export type TournamentMatchStatus =
+    | 'scheduled'
+    | 'in_progress'
+    | 'finished'
+    | 'postponed'
+    | 'cancelled';
+
+export type TournamentMatch = {
+    id: number;
+    home_tournament_team_id: number;
+    away_tournament_team_id: number;
+    home_team_name: string;
+    away_team_name: string;
+    starts_at: string;
+    locks_at: string | null;
+    status: TournamentMatchStatus;
+    status_label: string;
+    venue: string | null;
+};
+
+export type TournamentOption = {
+    value: string;
+    label: string;
+};
+
 export type RoleOption = {
     value: TeamRole;
     label: string;

@@ -41,6 +41,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, User> $participants
  * @property-read Collection<int, TournamentTeam> $tournamentTeams
  * @property-read Collection<int, Player> $players
+ * @property-read Collection<int, TournamentMatch> $matches
  */
 #[Fillable([
     'name',
@@ -141,6 +142,16 @@ class Tournament extends Model
     public function players(): HasMany
     {
         return $this->hasMany(Player::class, 'tournament_id');
+    }
+
+    /**
+     * Get all matches in the tournament.
+     *
+     * @return HasMany<TournamentMatch, $this>
+     */
+    public function matches(): HasMany
+    {
+        return $this->hasMany(TournamentMatch::class, 'tournament_id');
     }
 
     /**

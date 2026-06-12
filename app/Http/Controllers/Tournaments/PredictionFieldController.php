@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Tournaments;
 
 use App\Domain\Tournaments\Models\PredictionField;
 use App\Domain\Tournaments\Models\Tournament;
+use App\Domain\Tournaments\PredictionFieldTemplateCatalog;
 use App\Domain\Tournaments\Validation\PredictionFieldValidationService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tournaments\StorePredictionFieldRequest;
+use App\Http\Requests\Tournaments\StorePredictionFieldTemplateRequest;
 use App\Http\Requests\Tournaments\UpdatePredictionFieldRequest;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +29,26 @@ class PredictionFieldController extends Controller
         $tournament->predictionFields()->create($payload);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Prediction field created.')]);
+
+        return back();
+    }
+
+    public function storeTemplate(
+        StorePredictionFieldTemplateRequest $request,
+        Team $team,
+        PredictionFieldTemplateCatalog $templateCatalog,
+        PredictionFieldValidationService $fieldValidator,
+    ): RedirectResponse {
+        $tournament = Tournament::query()->findOrFail($team->id);
+
+        Gate::authorize('create', [PredictionField::class, $tournament]);
+
+        $payload = $templateCatalog->payloadFor($tournament, $request->validated('template_key'));
+        $fieldValidator->validateDefinition($payload);
+
+        $tournament->predictionFields()->create($payload);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Prediction template added.')]);
 
         return back();
     }

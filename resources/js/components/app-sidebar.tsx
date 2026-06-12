@@ -19,22 +19,45 @@ import type { NavItem } from '@/types';
 
 export function AppSidebar() {
     const page = usePage();
-    const dashboardUrl = page.props.currentTeam
-        ? dashboard(page.props.currentTeam.slug)
-        : '/';
-    const predictionsUrl = page.props.currentTeam
-        ? `/${page.props.currentTeam.slug}/predictions`
+    const teamSlug = page.props.currentTeam?.slug;
+    const dashboardUrl = teamSlug
+        ? dashboard(teamSlug)
         : '/';
 
     const mainNavItems: NavItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Overview',
             href: dashboardUrl,
             icon: LayoutGrid,
         },
         {
-            title: 'Predictions',
-            href: predictionsUrl,
+            title: 'Tournament Predictions',
+            href: teamSlug ? `/${teamSlug}/predictions/tournament` : '/',
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Match Predictions',
+            href: teamSlug ? `/${teamSlug}/predictions/matches` : '/',
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Leaderboard',
+            href: teamSlug ? `/${teamSlug}/leaderboard` : '/',
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Rules',
+            href: teamSlug ? `/${teamSlug}/rules` : '/',
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Admin: Questions',
+            href: teamSlug ? `/${teamSlug}/admin/prediction-questions` : '/',
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Admin: Results',
+            href: teamSlug ? `/${teamSlug}/admin/results/tournament` : '/',
             icon: LayoutGrid,
         },
     ];

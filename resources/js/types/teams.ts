@@ -142,6 +142,8 @@ export type MatchPredictionGroup = {
     match: {
         id: number;
         name: string;
+        home_team_name?: string;
+        away_team_name?: string;
         starts_at: string;
         locks_at: string | null;
     };

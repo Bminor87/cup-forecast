@@ -12,6 +12,7 @@ use App\Domain\Tournaments\Scoring\PredictionScoringService;
 use App\Domain\Tournaments\Validation\PredictionResultValidationService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tournaments\ResolvePredictionResultRequest;
+use App\Jobs\ScorePredictionResultJob;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -50,7 +51,7 @@ class PredictionResultController extends Controller
             ],
             [
                 'tournament_match_id' => $validated['tournament_match_id'] ?? null,
-                'value' => $validated['value'],
+                'value' => ['value' => $validated['value']],
                 'status' => $payload['status'],
                 'resolved_by' => $payload['status'] === PredictionResultStatus::Resolved->value
                     ? $request->user()->id
@@ -64,7 +65,9 @@ class PredictionResultController extends Controller
         $lockService->syncFieldPredictions($predictionField, $result->tournamentMatch);
 
         if ($result->status === PredictionResultStatus::Resolved) {
-            $scoringService->scoreResolvedField($predictionField, $result);
+            ScorePredictionResultJob::dispatch($result->id);
+        } else {
+            $scoringService->clearScoresForFieldContext($predictionField, $result->context_key);
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Prediction result saved.')]);

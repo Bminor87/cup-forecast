@@ -4,10 +4,6 @@ use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Teams\TeamController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\Teams\TeamMemberController;
-use App\Http\Controllers\Tournaments\PredictionFieldController;
-use App\Http\Controllers\Tournaments\PredictionResultController;
-use App\Http\Controllers\Tournaments\TournamentMatchController;
-use App\Http\Controllers\Tournaments\TournamentTeamController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
@@ -38,15 +34,5 @@ Route::middleware([
 
         Route::post('settings/teams/{team}/invitations', [TeamInvitationController::class, 'store'])->name('teams.invitations.store');
         Route::delete('settings/teams/{team}/invitations/{invitation}', [TeamInvitationController::class, 'destroy'])->name('teams.invitations.destroy');
-
-        Route::post('settings/teams/{team}/tournament-teams', [TournamentTeamController::class, 'store'])->name('teams.tournament-teams.store');
-        Route::delete('settings/teams/{team}/tournament-teams/{tournamentTeam}', [TournamentTeamController::class, 'destroy'])->name('teams.tournament-teams.destroy');
-
-        Route::post('settings/teams/{team}/matches', [TournamentMatchController::class, 'store'])->name('teams.matches.store');
-        Route::delete('settings/teams/{team}/matches/{tournamentMatch}', [TournamentMatchController::class, 'destroy'])->name('teams.matches.destroy');
-
-        Route::post('settings/teams/{team}/prediction-fields', [PredictionFieldController::class, 'store'])->name('teams.prediction-fields.store');
-        Route::patch('settings/teams/{team}/prediction-fields/{predictionField}', [PredictionFieldController::class, 'update'])->name('teams.prediction-fields.update');
-        Route::put('settings/teams/{team}/prediction-fields/{predictionField}/result', [PredictionResultController::class, 'upsert'])->name('teams.prediction-results.upsert');
     });
 });

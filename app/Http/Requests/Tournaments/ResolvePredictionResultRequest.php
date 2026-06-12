@@ -12,11 +12,16 @@ class ResolvePredictionResultRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $resultValue = $this->input('result_value');
+        $decodedValue = is_string($resultValue) && $resultValue !== ''
+            ? json_decode($resultValue, true)
+            : $this->input('value');
+
+        $normalizedValue = is_array($decodedValue) && array_key_exists('value', $decodedValue)
+            ? $decodedValue['value']
+            : $decodedValue;
 
         $this->merge([
-            'value' => is_string($resultValue) && $resultValue !== ''
-                ? json_decode($resultValue, true)
-                : $this->input('value'),
+            'value' => $normalizedValue,
             'tournament_match_id' => $this->input('tournament_match_id') === '' ? null : $this->input('tournament_match_id'),
         ]);
     }
@@ -37,7 +42,7 @@ class ResolvePredictionResultRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'value' => ['required', 'array'],
+            'value' => ['required'],
             'tournament_match_id' => ['nullable', 'integer'],
             'status' => ['required', 'string', Rule::in(array_column(PredictionResultStatus::cases(), 'value'))],
         ];

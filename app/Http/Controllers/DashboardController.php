@@ -6,10 +6,13 @@ use App\Domain\Tournaments\Enums\MatchStatus;
 use App\Domain\Tournaments\Enums\PredictionFieldType;
 use App\Domain\Tournaments\Enums\PredictionResultStatus;
 use App\Domain\Tournaments\Enums\PredictionScope;
+use App\Domain\Tournaments\Enums\PredictionStatus;
 use App\Domain\Tournaments\Enums\PredictionVisibility;
 use App\Domain\Tournaments\Enums\TeamType;
+use App\Domain\Tournaments\Models\Prediction;
 use App\Domain\Tournaments\Models\PredictionField;
 use App\Domain\Tournaments\Models\PredictionResult;
+use App\Domain\Tournaments\Models\PredictionScore;
 use App\Domain\Tournaments\Models\Tournament;
 use App\Domain\Tournaments\Models\TournamentMatch;
 use App\Domain\Tournaments\Models\TournamentTeam;
@@ -106,9 +109,100 @@ class DashboardController extends Controller
                     ]),
             ]) ?? collect();
 
+        $participantSummary = null;
+        $upcomingMatches = collect();
+        $upcomingDeadlines = collect();
+
+        if ($tournament !== null) {
+            $scoreTotals = PredictionScore::query()
+                ->select('user_id')
+                ->selectRaw('SUM(points) as points')
+                ->where('tournament_id', $tournament->id)
+                ->groupBy('user_id');
+
+            $rankedParticipants = $tournament->participants()
+                ->select('users.id')
+                ->leftJoinSub($scoreTotals, 'score_totals', fn ($join) => $join->on('users.id', '=', 'score_totals.user_id'))
+                ->orderByRaw('COALESCE(score_totals.points, 0) DESC')
+                ->orderBy('users.name')
+                ->get();
+
+            $rank = $rankedParticipants
+                ->pluck('id')
+                ->search($user->id);
+
+            $currentPoints = (int) (PredictionScore::query()
+                ->where('tournament_id', $tournament->id)
+                ->where('user_id', $user->id)
+                ->sum('points'));
+
+            $tournamentFieldCount = (int) $tournament->predictionFields()
+                ->where('scope', PredictionScope::Tournament->value)
+                ->where('is_active', true)
+                ->count();
+
+            $matchFieldCount = (int) $tournament->predictionFields()
+                ->where('scope', PredictionScope::Match->value)
+                ->where('is_active', true)
+                ->count();
+
+            $matchCount = (int) $tournament->matches()->count();
+
+            $submittedPredictionCount = (int) Prediction::query()
+                ->where('tournament_id', $tournament->id)
+                ->where('user_id', $user->id)
+                ->whereIn('status', [
+                    PredictionStatus::Submitted->value,
+                    PredictionStatus::Locked->value,
+                ])
+                ->count();
+
+            $totalPredictionSlots = $tournamentFieldCount + ($matchFieldCount * $matchCount);
+            $remainingPredictionCount = max($totalPredictionSlots - $submittedPredictionCount, 0);
+
+            $participantSummary = [
+                'rank' => $rank === false ? null : $rank + 1,
+                'points' => $currentPoints,
+                'submitted_predictions' => $submittedPredictionCount,
+                'remaining_predictions' => $remainingPredictionCount,
+            ];
+
+            $upcomingMatches = $tournament->matches()
+                ->with(['homeTournamentTeam:id,name', 'awayTournamentTeam:id,name'])
+                ->where('starts_at', '>=', now())
+                ->orderBy('starts_at')
+                ->limit(6)
+                ->get()
+                ->map(fn (TournamentMatch $match): array => [
+                    'id' => $match->id,
+                    'home_team_name' => $match->homeTournamentTeam->name,
+                    'away_team_name' => $match->awayTournamentTeam->name,
+                    'starts_at' => $match->starts_at->toISOString(),
+                    'locks_at' => $match->locks_at?->toISOString(),
+                ])
+                ->values();
+
+            $upcomingDeadlines = $tournament->matches()
+                ->with(['homeTournamentTeam:id,name', 'awayTournamentTeam:id,name'])
+                ->whereNotNull('locks_at')
+                ->where('locks_at', '>=', now())
+                ->orderBy('locks_at')
+                ->limit(6)
+                ->get()
+                ->map(fn (TournamentMatch $match): array => [
+                    'id' => $match->id,
+                    'match_name' => $match->homeTournamentTeam->name.' vs '.$match->awayTournamentTeam->name,
+                    'locks_at' => $match->locks_at?->toISOString(),
+                ])
+                ->values();
+        }
+
         return Inertia::render('dashboard', [
             'pendingInvitations' => $pendingInvitations,
             'currentTeamSlug' => $currentTeam?->slug,
+            'participantSummary' => $participantSummary,
+            'upcomingMatches' => $upcomingMatches,
+            'upcomingDeadlines' => $upcomingDeadlines,
             'tournamentTeams' => $tournamentTeams->values(),
             'matches' => $matches->values(),
             'predictionFields' => $predictionFields->values(),

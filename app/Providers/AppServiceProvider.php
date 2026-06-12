@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Domain\Tournaments\Models\Player;
 use App\Domain\Tournaments\Models\Tournament;
 use App\Domain\Tournaments\Models\TournamentTeam;
+use App\Domain\Tournaments\Policies\PlayerPolicy;
 use App\Domain\Tournaments\Policies\TournamentPolicy;
 use App\Domain\Tournaments\Policies\TournamentTeamPolicy;
 use Carbon\CarbonImmutable;
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Tournament::class, TournamentPolicy::class);
         Gate::policy(TournamentTeam::class, TournamentTeamPolicy::class);
+        Gate::policy(Player::class, PlayerPolicy::class);
 
         $this->configureDefaults();
     }

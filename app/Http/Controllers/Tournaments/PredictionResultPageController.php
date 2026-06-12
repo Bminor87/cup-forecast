@@ -32,6 +32,8 @@ class PredictionResultPageController extends Controller
                 'id' => $field->id,
                 'label' => $field->label,
                 'field_type' => $field->field_type->value,
+                'option_source' => $field->optionSource()?->value,
+                'options' => $this->optionsForField($field, null),
                 'result' => $field->predictionResults
                     ->sortByDesc('updated_at')
                     ->values()
@@ -80,14 +82,18 @@ class PredictionResultPageController extends Controller
                 return [
                     'id' => $match->id,
                     'name' => $match->homeTournamentTeam->name.' vs '.$match->awayTournamentTeam->name,
+                    'home_team_name' => $match->homeTournamentTeam->name,
+                    'away_team_name' => $match->awayTournamentTeam->name,
                     'starts_at' => $match->starts_at->toISOString(),
-                    'fields' => $fields->map(function (PredictionField $field) use ($resultsByContext, $contextKey): array {
+                    'fields' => $fields->map(function (PredictionField $field) use ($resultsByContext, $contextKey, $match): array {
                         $result = $resultsByContext->get($field->id.'|'.$contextKey);
 
                         return [
                             'id' => $field->id,
                             'label' => $field->label,
                             'field_type' => $field->field_type->value,
+                            'option_source' => $field->optionSource()?->value,
+                            'options' => $this->optionsForField($field, $match),
                             'result' => $result ? [
                                 'id' => $result->id,
                                 'status' => $result->status->value,
@@ -120,5 +126,67 @@ class PredictionResultPageController extends Controller
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<int, array{value: mixed, label: string}>
+     */
+    protected function optionsForField(PredictionField $field, ?TournamentMatch $match): array
+    {
+        $source = $field->optionSource();
+
+        if ($source === null) {
+            return [];
+        }
+
+        return match ($source->value) {
+            'all_tournament_teams' => $field->tournament
+                ->tournamentTeams()
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($team): array => [
+                    'value' => $team->id,
+                    'label' => $team->name,
+                ])
+                ->values()
+                ->all(),
+            'match_teams' => $match
+                ? collect([$match->homeTournamentTeam, $match->awayTournamentTeam])
+                    ->filter()
+                    ->map(fn ($team): array => [
+                        'value' => $team->id,
+                        'label' => $team->name,
+                    ])
+                    ->values()
+                    ->all()
+                : [],
+            'all_tournament_players' => $field->tournament
+                ->players()
+                ->with('tournamentTeam:id,name')
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($player): array => [
+                    'value' => $player->id,
+                    'label' => $player->name.($player->tournamentTeam?->name ? ' ('.$player->tournamentTeam->name.')' : ''),
+                ])
+                ->values()
+                ->all(),
+            'match_players' => $match
+                ? $field->tournament
+                    ->players()
+                    ->whereIn('tournament_team_id', [$match->home_tournament_team_id, $match->away_tournament_team_id])
+                    ->with('tournamentTeam:id,name')
+                    ->orderBy('name')
+                    ->get()
+                    ->map(fn ($player): array => [
+                        'value' => $player->id,
+                        'label' => $player->name.($player->tournamentTeam?->name ? ' ('.$player->tournamentTeam->name.')' : ''),
+                    ])
+                    ->values()
+                    ->all()
+                : [],
+            'static_options' => $field->staticOptions(),
+            default => [],
+        };
     }
 }

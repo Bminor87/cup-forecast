@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { CalendarClock, CheckCircle2, Clock3, Lock, Save, ShieldCheck, Trophy } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Heading from '@/components/heading';
 import PredictionFieldRenderer from '@/components/predictions/prediction-field-renderer';
@@ -169,46 +170,72 @@ export default function PredictionsIndex({
             <Head title="Predictions" />
 
             <div className="space-y-8 rounded-xl p-4">
-                <section className="space-y-4 rounded-xl border p-5">
-                    <Heading
-                        variant="small"
-                        title="Tournament Predictions"
-                        description="One answer per tournament-scoped prediction field"
-                    />
+                <section className="rounded-2xl border border-sky-900/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <Heading
+                            variant="small"
+                            title="Match Center"
+                            description="Submit your predictions by fixture. Picks save automatically as you update them."
+                        />
 
-                    <div className="space-y-4">
-                        {tournamentPredictions.map((field) => (
-                            <PredictionFieldCard
-                                key={keyFor(field)}
-                                field={field}
-                                state={predictionState[keyFor(field)]}
-                                onValueChange={updateValue}
-                            />
-                        ))}
+                        <div className="flex items-center gap-2 text-xs text-slate-300">
+                            <Badge variant="outline" className="border-sky-700/70 bg-sky-500/10 text-sky-200">
+                                <Save className="mr-1 h-3 w-3" />
+                                Auto-save enabled
+                            </Badge>
+                        </div>
                     </div>
                 </section>
 
-                <section className="space-y-4 rounded-xl border p-5">
+                {tournamentPredictions.length > 0 ? (
+                    <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-5">
+                        <div className="flex items-center gap-2 text-slate-200">
+                            <Trophy className="h-4 w-4" />
+                            Tournament predictions
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {tournamentPredictions.map((field) => (
+                                <PredictionFieldCard
+                                    key={keyFor(field)}
+                                    field={field}
+                                    state={predictionState[keyFor(field)]}
+                                    onValueChange={updateValue}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                ) : null}
+
+                <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/60 p-5">
                     <Heading
                         variant="small"
-                        title="Match Predictions"
-                        description="One answer per field for each match"
+                        title="Matchday Picks"
+                        description="Fill in outcomes, scorers, and key events for each fixture."
                     />
 
                     <div className="space-y-6">
                         {matchPredictions.map((group) => (
-                            <div key={group.match.id} className="space-y-3 rounded-lg border p-4">
+                            <div key={group.match.id} className="space-y-4 rounded-xl border border-slate-800 bg-slate-950/70 p-4">
                                 <div className="space-y-1">
-                                    <div className="font-medium">{group.match.name}</div>
-                                    <div className="text-sm text-muted-foreground">
-                                        Starts: {new Date(group.match.starts_at).toLocaleString()}
+                                    <div className="font-medium text-slate-100">{group.match.name}</div>
+                                    <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+                                        <span className="inline-flex items-center gap-1">
+                                            <CalendarClock className="h-4 w-4" />
+                                            {new Date(group.match.starts_at).toLocaleString()}
+                                        </span>
                                         {group.match.locks_at
-                                            ? ` • Locks: ${new Date(group.match.locks_at).toLocaleString()}`
-                                            : ''}
+                                            ? (
+                                                <span className="inline-flex items-center gap-1">
+                                                    <Lock className="h-4 w-4" />
+                                                    Locks {new Date(group.match.locks_at).toLocaleString()}
+                                                </span>
+                                            )
+                                            : null}
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
                                     {group.fields.map((field) => (
                                         <PredictionFieldCard
                                             key={keyFor(field)}
@@ -244,16 +271,24 @@ function PredictionFieldCard({
         : 'Not saved yet';
 
     return (
-        <div className="space-y-3 rounded-lg border p-4" data-test="participant-prediction-field-row">
+        <div className="space-y-3 rounded-lg border border-slate-800 bg-slate-950/80 p-4" data-test="participant-prediction-field-row">
             <div className="flex flex-wrap items-center gap-2">
-                <div className="font-medium">{field.label}</div>
-                <Badge variant={state.isLocked ? 'destructive' : 'secondary'}>{lockBadge}</Badge>
-                <Badge variant="outline">{state.status}</Badge>
-                {state.saving ? <Badge variant="secondary">Saving...</Badge> : null}
+                <div className="font-medium text-slate-100">{field.label}</div>
+                <Badge variant={state.isLocked ? 'destructive' : 'secondary'} className={state.isLocked ? '' : 'bg-emerald-500/15 text-emerald-200'}>
+                    {state.isLocked ? <Lock className="mr-1 h-3 w-3" /> : <ShieldCheck className="mr-1 h-3 w-3" />}
+                    {lockBadge}
+                </Badge>
+                <Badge variant="outline" className="border-slate-700 text-slate-300">{state.status}</Badge>
+                {state.saving ? (
+                    <Badge variant="secondary" className="bg-slate-800 text-slate-200">
+                        <Clock3 className="mr-1 h-3 w-3" />
+                        Saving
+                    </Badge>
+                ) : null}
             </div>
 
             {field.description ? (
-                <div className="text-sm text-muted-foreground">{field.description}</div>
+                <div className="text-sm text-slate-400">{field.description}</div>
             ) : null}
 
             <PredictionFieldRenderer
@@ -266,15 +301,18 @@ function PredictionFieldCard({
                 onChange={(value) => onValueChange(field, value)}
             />
 
-            <div className="text-xs text-muted-foreground">Last saved: {lastSaved}</div>
+            <div className="text-xs text-slate-500">Last saved: {lastSaved}</div>
 
             {field.result_status ? (
-                <div className="rounded-md border px-3 py-2 text-sm">
-                    <div className="font-medium">Official result</div>
+                <div className="rounded-md border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm">
+                    <div className="flex items-center gap-1 font-medium text-slate-100">
+                        <CheckCircle2 className="h-4 w-4" />
+                        Official result
+                    </div>
                     {field.result_is_visible ? (
-                        <div>{String(field.result_value)}</div>
+                        <div className="mt-1 text-slate-200">{formatResultPreview(field.result_value)}</div>
                     ) : (
-                        <div className="text-muted-foreground">Result hidden by visibility rule.</div>
+                        <div className="mt-1 text-slate-400">Result hidden until this market unlocks.</div>
                     )}
                 </div>
             ) : null}
@@ -284,6 +322,18 @@ function PredictionFieldCard({
             ) : null}
         </div>
     );
+}
+
+function formatResultPreview(value: unknown): string {
+    if (value === null || value === undefined) {
+        return 'No result value';
+    }
+
+    if (typeof value === 'object') {
+        return JSON.stringify(value);
+    }
+
+    return String(value);
 }
 
 function keyFor(field: ParticipantPredictionField): string {

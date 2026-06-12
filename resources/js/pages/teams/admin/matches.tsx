@@ -1,8 +1,9 @@
 import { Form, Head, router } from '@inertiajs/react';
-import { X } from 'lucide-react';
+import { CalendarDays, Clock3, MapPin, X } from 'lucide-react';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import TournamentAdminNav from '@/components/teams/tournament-admin-nav';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,11 +47,20 @@ export default function AdminMatchesPage({
             <Head title="Admin Matches" />
 
             <div className="space-y-6 rounded-xl p-4">
-                <Heading
-                    variant="small"
-                    title="Admin: Matches"
-                    description="Create and manage fixtures for match prediction workflows."
-                />
+                <section className="rounded-2xl border border-sky-900/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <Heading
+                            variant="small"
+                            title="Fixture Board"
+                            description="Schedule kickoff times and venues before opening predictions to participants."
+                        />
+
+                        <Badge variant="outline" className="border-sky-700/70 bg-sky-500/10 text-sky-200">
+                            <CalendarDays className="mr-1 h-3 w-3" />
+                            {matches.length} fixtures
+                        </Badge>
+                    </div>
+                </section>
 
                 <TournamentAdminNav teamSlug={teamSlug} />
 
@@ -58,10 +68,12 @@ export default function AdminMatchesPage({
                     <Form
                         action={`/${teamSlug}/admin/matches`}
                         method="post"
-                        className="grid gap-4 rounded-xl border p-4 md:grid-cols-3"
+                        className="grid gap-4 rounded-xl border border-slate-800 bg-slate-950/60 p-5 md:grid-cols-3"
                     >
                         {({ errors, processing }) => (
                             <>
+                                <div className="md:col-span-3 text-sm text-slate-200">Create a new fixture</div>
+
                                 <div className="grid gap-2">
                                     <Label htmlFor="home_tournament_team_id">Home team</Label>
                                     <select
@@ -127,7 +139,7 @@ export default function AdminMatchesPage({
                                 </div>
                                 <div className="md:col-span-3">
                                     <Button type="submit" disabled={processing}>
-                                        Add match
+                                        Publish fixture
                                     </Button>
                                 </div>
                             </>
@@ -137,14 +149,27 @@ export default function AdminMatchesPage({
 
                 <div className="space-y-3">
                     {matches.map((match) => (
-                        <div key={match.id} className="flex items-center justify-between rounded-xl border p-4">
-                            <div>
-                                <div className="font-medium">
+                        <div key={match.id} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                            <div className="space-y-2">
+                                <div className="font-medium text-slate-100">
                                     {match.home_team_name} vs {match.away_team_name}
                                 </div>
-                                <div className="text-sm text-muted-foreground">
-                                    {new Date(match.starts_at).toLocaleString()} • {match.status_label}
-                                    {match.venue ? ` • ${match.venue}` : ''}
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+                                    <span className="inline-flex items-center gap-1">
+                                        <Clock3 className="h-4 w-4" />
+                                        {new Date(match.starts_at).toLocaleString()}
+                                    </span>
+                                    <span>•</span>
+                                    <span>{match.status_label}</span>
+                                    {match.venue ? (
+                                        <>
+                                            <span>•</span>
+                                            <span className="inline-flex items-center gap-1">
+                                                <MapPin className="h-4 w-4" />
+                                                {match.venue}
+                                            </span>
+                                        </>
+                                    ) : null}
                                 </div>
                             </div>
 

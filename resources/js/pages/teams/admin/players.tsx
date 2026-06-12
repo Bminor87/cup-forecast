@@ -1,8 +1,9 @@
 import { Form, Head, router } from '@inertiajs/react';
-import { X } from 'lucide-react';
+import { Shirt, UserRoundPlus, X } from 'lucide-react';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import TournamentAdminNav from '@/components/teams/tournament-admin-nav';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,11 +47,20 @@ export default function AdminPlayersPage({
             <Head title="Admin Players" />
 
             <div className="space-y-6 rounded-xl p-4">
-                <Heading
-                    variant="small"
-                    title="Admin: Players"
-                    description="Manage players used in player-based prediction templates."
-                />
+                <section className="rounded-2xl border border-sky-900/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        <Heading
+                            variant="small"
+                            title="Squad Desk"
+                            description="Register player pools so match MVP, scorer, and award predictions stay accurate."
+                        />
+
+                        <Badge variant="outline" className="border-sky-700/70 bg-sky-500/10 text-sky-200">
+                            <Shirt className="mr-1 h-3 w-3" />
+                            {players.length} players
+                        </Badge>
+                    </div>
+                </section>
 
                 <TournamentAdminNav teamSlug={teamSlug} />
 
@@ -58,10 +68,15 @@ export default function AdminPlayersPage({
                     <Form
                         action={`/${teamSlug}/admin/players`}
                         method="post"
-                        className="grid gap-4 rounded-xl border p-4 md:grid-cols-3"
+                        className="grid gap-4 rounded-xl border border-slate-800 bg-slate-950/60 p-5 md:grid-cols-3"
                     >
                         {({ errors, processing }) => (
                             <>
+                                <div className="md:col-span-3 flex items-center gap-2 text-sm text-slate-200">
+                                    <UserRoundPlus className="h-4 w-4" />
+                                    Add a player to a tournament squad
+                                </div>
+
                                 <div className="grid gap-2">
                                     <Label htmlFor="tournament_team_id">Team</Label>
                                     <select
@@ -111,7 +126,7 @@ export default function AdminPlayersPage({
                                 </div>
                                 <div className="md:col-span-3">
                                     <Button type="submit" disabled={processing}>
-                                        Add player
+                                        Add to squad
                                     </Button>
                                 </div>
                             </>
@@ -119,15 +134,21 @@ export default function AdminPlayersPage({
                     </Form>
                 ) : null}
 
-                <div className="space-y-3">
+                <div className="grid gap-3 md:grid-cols-2">
                     {players.map((player) => (
-                        <div key={player.id} className="flex items-center justify-between rounded-xl border p-4">
-                            <div>
-                                <div className="font-medium">{player.name}</div>
-                                <div className="text-sm text-muted-foreground">
+                        <div key={player.id} className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-900 text-slate-100">
+                                    {player.shirt_number ?? '-'}
+                                </div>
+
+                                <div>
+                                    <div className="font-medium text-slate-100">{player.name}</div>
+                                    <div className="text-sm text-slate-400">
                                     {player.team_name}
                                     {player.position ? ` • ${player.position}` : ''}
                                     {player.shirt_number ? ` • #${player.shirt_number}` : ''}
+                                    </div>
                                 </div>
                             </div>
 

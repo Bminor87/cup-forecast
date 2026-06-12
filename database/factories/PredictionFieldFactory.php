@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Domain\Tournaments\Enums\PredictionFieldType;
+use App\Domain\Tournaments\Enums\PredictionOptionSource;
 use App\Domain\Tournaments\Enums\PredictionScope;
 use App\Domain\Tournaments\Enums\PredictionVisibility;
 use App\Domain\Tournaments\Enums\TournamentCompetitionMode;
@@ -71,6 +72,34 @@ class PredictionFieldFactory extends Factory
     {
         return $this->state(fn (): array => [
             'scope' => PredictionScope::Match,
+        ]);
+    }
+
+    public function teamPicker(?PredictionOptionSource $optionSource = null): static
+    {
+        $optionSource ??= PredictionOptionSource::AllTournamentTeams;
+
+        return $this->state(fn (): array => [
+            'field_type' => PredictionFieldType::TeamPicker,
+            'configuration' => [
+                'is_locked' => false,
+                'max_points' => 1,
+                'option_source' => $optionSource->value,
+            ],
+        ]);
+    }
+
+    public function playerPicker(?PredictionOptionSource $optionSource = null): static
+    {
+        $optionSource ??= PredictionOptionSource::AllTournamentPlayers;
+
+        return $this->state(fn (): array => [
+            'field_type' => PredictionFieldType::PlayerPicker,
+            'configuration' => [
+                'is_locked' => false,
+                'max_points' => 1,
+                'option_source' => $optionSource->value,
+            ],
         ]);
     }
 }

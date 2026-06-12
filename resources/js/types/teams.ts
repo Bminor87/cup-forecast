@@ -97,12 +97,56 @@ export type PredictionFieldType =
     | 'date'
     | 'time';
 
+export type PredictionOptionSource =
+    | 'all_tournament_teams'
+    | 'match_teams'
+    | 'all_tournament_players'
+    | 'match_players'
+    | 'static_options';
+
 export type PredictionVisibility =
     | 'hidden_until_lock'
     | 'hidden_until_result'
     | 'always_visible';
 
 export type PredictionResultStatus = 'pending' | 'resolved';
+export type PredictionStatus = 'draft' | 'submitted' | 'locked';
+
+export type PredictionPickerOption = {
+    value: string | number | boolean;
+    label: string;
+};
+
+export type ParticipantPredictionField = {
+    id: number;
+    scope: PredictionFieldScope;
+    field_type: PredictionFieldType;
+    option_source: PredictionOptionSource | null;
+    options: PredictionPickerOption[];
+    label: string;
+    description: string | null;
+    visibility: PredictionVisibility;
+    validation_schema: Record<string, unknown> | null;
+    context_key: string;
+    tournament_match_id: number | null;
+    value: unknown;
+    status: PredictionStatus;
+    is_locked: boolean;
+    last_saved_at: string | null;
+    result_status: PredictionResultStatus | null;
+    result_value: unknown;
+    result_is_visible: boolean;
+};
+
+export type MatchPredictionGroup = {
+    match: {
+        id: number;
+        name: string;
+        starts_at: string;
+        locks_at: string | null;
+    };
+    fields: ParticipantPredictionField[];
+};
 
 export type PredictionResult = {
     id: number;
@@ -117,6 +161,7 @@ export type PredictionField = {
     id: number;
     scope: PredictionFieldScope;
     field_type: PredictionFieldType;
+    option_source?: PredictionOptionSource | null;
     label: string;
     description: string | null;
     key: string;

@@ -3,6 +3,7 @@
 namespace App\Domain\Tournaments\Models;
 
 use App\Domain\Tournaments\Enums\PredictionFieldType;
+use App\Domain\Tournaments\Enums\PredictionOptionSource;
 use App\Domain\Tournaments\Enums\PredictionScope;
 use App\Domain\Tournaments\Enums\PredictionVisibility;
 use Database\Factories\PredictionFieldFactory;
@@ -65,6 +66,76 @@ class PredictionField extends Model
     public function isManuallyLocked(): bool
     {
         return (bool) ($this->configuration['is_locked'] ?? false);
+    }
+
+    public function optionSource(): ?PredictionOptionSource
+    {
+        $configuredSource = $this->configuration['option_source'] ?? null;
+
+        if (is_string($configuredSource)) {
+            $source = PredictionOptionSource::tryFrom($configuredSource);
+
+            if ($source !== null) {
+                return $source;
+            }
+        }
+
+        return $this->defaultOptionSource();
+    }
+
+    public function defaultOptionSource(): ?PredictionOptionSource
+    {
+        return match ($this->field_type) {
+            PredictionFieldType::TeamPicker => $this->scope === PredictionScope::Match
+                ? PredictionOptionSource::MatchTeams
+                : PredictionOptionSource::AllTournamentTeams,
+            PredictionFieldType::PlayerPicker => $this->scope === PredictionScope::Match
+                ? PredictionOptionSource::MatchPlayers
+                : PredictionOptionSource::AllTournamentPlayers,
+            default => null,
+        };
+    }
+
+    /**
+     * @return array<int, array{value: mixed, label: string}>
+     */
+    public function staticOptions(): array
+    {
+        $configuredOptions = $this->configuration['static_options'] ?? [];
+
+        if (! is_array($configuredOptions)) {
+            return [];
+        }
+
+        return collect($configuredOptions)
+            ->map(function (mixed $option): ?array {
+                if (is_array($option) && array_key_exists('value', $option)) {
+                    $label = isset($option['label']) && is_scalar($option['label'])
+                        ? (string) $option['label']
+                        : (is_scalar($option['value']) ? (string) $option['value'] : null);
+
+                    if ($label === null) {
+                        return null;
+                    }
+
+                    return [
+                        'value' => $option['value'],
+                        'label' => $label,
+                    ];
+                }
+
+                if (is_scalar($option)) {
+                    return [
+                        'value' => $option,
+                        'label' => (string) $option,
+                    ];
+                }
+
+                return null;
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**

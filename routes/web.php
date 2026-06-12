@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Teams\TeamInvitationController;
+use App\Http\Controllers\Tournaments\ParticipantPredictionController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 use Laravel\WorkOS\Http\Middleware\ValidateSessionWithWorkOS;
@@ -12,6 +13,8 @@ Route::prefix('{current_team}')
     ->middleware(['auth', ValidateSessionWithWorkOS::class, EnsureTeamMembership::class])
     ->group(function () {
         Route::get('dashboard', DashboardController::class)->name('dashboard');
+        Route::get('predictions', [ParticipantPredictionController::class, 'index'])->name('predictions.index');
+        Route::put('predictions/{predictionField}', [ParticipantPredictionController::class, 'upsert'])->name('predictions.upsert');
     });
 
 Route::middleware(['auth'])->group(function () {

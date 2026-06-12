@@ -22,7 +22,15 @@ class PredictionLockService
         }
 
         if ($prediction->tournamentMatch === null) {
-            return false;
+            $tournament = $prediction->relationLoaded('tournament')
+                ? $prediction->tournament
+                : $prediction->tournament()->first();
+
+            if ($tournament?->starts_at === null) {
+                return false;
+            }
+
+            return $tournament->starts_at->lessThanOrEqualTo($at);
         }
 
         $lockTime = $prediction->tournamentMatch->locks_at ?? $prediction->tournamentMatch->starts_at;

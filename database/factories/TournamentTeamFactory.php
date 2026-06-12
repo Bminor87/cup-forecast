@@ -35,6 +35,7 @@ class TournamentTeamFactory extends Factory
                 'sport_type' => TournamentSportType::Football,
                 'competition_mode' => TournamentCompetitionMode::NationalTeams,
                 'status' => TournamentStatus::Draft,
+                'slug' => fake()->unique()->slug(),
             ])->id,
             'name' => fake()->unique()->country(),
             'short_name' => strtoupper(fake()->lexify('???')),

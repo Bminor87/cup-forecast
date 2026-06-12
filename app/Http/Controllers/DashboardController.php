@@ -86,6 +86,7 @@ class DashboardController extends Controller
                 'description' => $field->description,
                 'key' => $field->key,
                 'visibility' => $field->visibility->value,
+                'option_source' => $field->optionSource()?->value,
                 'validation_schema' => $field->validation_schema,
                 'scoring_strategy_key' => $field->scoring_strategy_key,
                 'configuration' => $field->configuration,

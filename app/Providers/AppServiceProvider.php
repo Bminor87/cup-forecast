@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domain\Tournaments\Models\Player;
+use App\Domain\Tournaments\Models\Prediction;
 use App\Domain\Tournaments\Models\PredictionField;
 use App\Domain\Tournaments\Models\PredictionResult;
 use App\Domain\Tournaments\Models\Tournament;
@@ -10,6 +11,7 @@ use App\Domain\Tournaments\Models\TournamentMatch;
 use App\Domain\Tournaments\Models\TournamentTeam;
 use App\Domain\Tournaments\Policies\PlayerPolicy;
 use App\Domain\Tournaments\Policies\PredictionFieldPolicy;
+use App\Domain\Tournaments\Policies\PredictionPolicy;
 use App\Domain\Tournaments\Policies\PredictionResultPolicy;
 use App\Domain\Tournaments\Policies\TournamentMatchPolicy;
 use App\Domain\Tournaments\Policies\TournamentPolicy;
@@ -40,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(TournamentTeam::class, TournamentTeamPolicy::class);
         Gate::policy(Player::class, PlayerPolicy::class);
         Gate::policy(TournamentMatch::class, TournamentMatchPolicy::class);
+        Gate::policy(Prediction::class, PredictionPolicy::class);
         Gate::policy(PredictionField::class, PredictionFieldPolicy::class);
         Gate::policy(PredictionResult::class, PredictionResultPolicy::class);
 

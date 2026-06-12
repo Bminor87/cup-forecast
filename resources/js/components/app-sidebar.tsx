@@ -22,11 +22,19 @@ export function AppSidebar() {
     const dashboardUrl = page.props.currentTeam
         ? dashboard(page.props.currentTeam.slug)
         : '/';
+    const predictionsUrl = page.props.currentTeam
+        ? `/${page.props.currentTeam.slug}/predictions`
+        : '/';
 
     const mainNavItems: NavItem[] = [
         {
             title: 'Dashboard',
             href: dashboardUrl,
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Predictions',
+            href: predictionsUrl,
             icon: LayoutGrid,
         },
     ];

@@ -86,6 +86,48 @@ export type TournamentOption = {
     label: string;
 };
 
+export type PredictionFieldScope = 'tournament' | 'match';
+
+export type PredictionFieldType =
+    | 'team_picker'
+    | 'player_picker'
+    | 'text'
+    | 'number'
+    | 'boolean'
+    | 'date'
+    | 'time';
+
+export type PredictionVisibility =
+    | 'hidden_until_lock'
+    | 'hidden_until_result'
+    | 'always_visible';
+
+export type PredictionResultStatus = 'pending' | 'resolved';
+
+export type PredictionResult = {
+    id: number;
+    tournament_match_id: number | null;
+    match_name: string | null;
+    status: PredictionResultStatus;
+    value: Record<string, unknown>;
+    resolved_at: string | null;
+};
+
+export type PredictionField = {
+    id: number;
+    scope: PredictionFieldScope;
+    field_type: PredictionFieldType;
+    label: string;
+    description: string | null;
+    key: string;
+    visibility: PredictionVisibility;
+    validation_schema: Record<string, unknown> | null;
+    scoring_strategy_key: string;
+    configuration: Record<string, unknown> | null;
+    is_active: boolean;
+    results: PredictionResult[];
+};
+
 export type RoleOption = {
     value: TeamRole;
     label: string;

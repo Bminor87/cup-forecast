@@ -42,6 +42,10 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, TournamentTeam> $tournamentTeams
  * @property-read Collection<int, Player> $players
  * @property-read Collection<int, TournamentMatch> $matches
+ * @property-read Collection<int, PredictionField> $predictionFields
+ * @property-read Collection<int, Prediction> $predictions
+ * @property-read Collection<int, PredictionResult> $predictionResults
+ * @property-read Collection<int, PredictionScore> $predictionScores
  */
 #[Fillable([
     'name',
@@ -152,6 +156,46 @@ class Tournament extends Model
     public function matches(): HasMany
     {
         return $this->hasMany(TournamentMatch::class, 'tournament_id');
+    }
+
+    /**
+     * Get all prediction fields in the tournament.
+     *
+     * @return HasMany<PredictionField, $this>
+     */
+    public function predictionFields(): HasMany
+    {
+        return $this->hasMany(PredictionField::class, 'tournament_id');
+    }
+
+    /**
+     * Get all predictions in the tournament.
+     *
+     * @return HasMany<Prediction, $this>
+     */
+    public function predictions(): HasMany
+    {
+        return $this->hasMany(Prediction::class, 'tournament_id');
+    }
+
+    /**
+     * Get all prediction results in the tournament.
+     *
+     * @return HasMany<PredictionResult, $this>
+     */
+    public function predictionResults(): HasMany
+    {
+        return $this->hasMany(PredictionResult::class, 'tournament_id');
+    }
+
+    /**
+     * Get all persisted prediction scores in the tournament.
+     *
+     * @return HasMany<PredictionScore, $this>
+     */
+    public function predictionScores(): HasMany
+    {
+        return $this->hasMany(PredictionScore::class, 'tournament_id');
     }
 
     /**

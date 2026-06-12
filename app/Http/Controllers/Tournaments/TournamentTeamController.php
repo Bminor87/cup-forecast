@@ -26,7 +26,7 @@ class TournamentTeamController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Tournament team created.')]);
 
-        return to_route('teams.edit', ['team' => $team->slug]);
+        return back();
     }
 
     /**
@@ -42,6 +42,6 @@ class TournamentTeamController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Tournament team deleted.')]);
 
-        return to_route('teams.edit', ['team' => $team->slug]);
+        return back();
     }
 }

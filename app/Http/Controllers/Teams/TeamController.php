@@ -3,11 +3,6 @@
 namespace App\Http\Controllers\Teams;
 
 use App\Actions\Teams\CreateTeam;
-use App\Domain\Tournaments\Enums\MatchStatus;
-use App\Domain\Tournaments\Enums\TeamType;
-use App\Domain\Tournaments\Models\Tournament;
-use App\Domain\Tournaments\Models\TournamentMatch;
-use App\Domain\Tournaments\Models\TournamentTeam;
 use App\Enums\TeamRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\DeleteTeamRequest;
@@ -54,7 +49,6 @@ class TeamController extends Controller
     public function edit(Request $request, Team $team): Response
     {
         $user = $request->user();
-        $tournament = Tournament::query()->findOrFail($team->id);
 
         return Inertia::render('teams/edit', [
             'team' => [
@@ -86,43 +80,6 @@ class TeamController extends Controller
                     'role_label' => $invitation->role->label(),
                     'created_at' => $invitation->created_at->toISOString(),
                 ]),
-            'tournamentTeams' => $tournament->tournamentTeams()
-                ->orderBy('name')
-                ->get()
-                ->map(fn (TournamentTeam $tournamentTeam) => [
-                    'id' => $tournamentTeam->id,
-                    'name' => $tournamentTeam->name,
-                    'short_name' => $tournamentTeam->short_name,
-                    'type' => $tournamentTeam->type->value,
-                    'type_label' => ucfirst($tournamentTeam->type->value),
-                ]),
-            'matches' => $tournament->matches()
-                ->with(['homeTournamentTeam', 'awayTournamentTeam'])
-                ->orderBy('starts_at')
-                ->get()
-                ->map(fn (TournamentMatch $match) => [
-                    'id' => $match->id,
-                    'home_tournament_team_id' => $match->home_tournament_team_id,
-                    'away_tournament_team_id' => $match->away_tournament_team_id,
-                    'home_team_name' => $match->homeTournamentTeam->name,
-                    'away_team_name' => $match->awayTournamentTeam->name,
-                    'starts_at' => $match->starts_at->toISOString(),
-                    'locks_at' => $match->locks_at?->toISOString(),
-                    'status' => $match->status->value,
-                    'status_label' => str_replace('_', ' ', ucfirst($match->status->value)),
-                    'venue' => $match->venue,
-                ]),
-            'teamTypes' => collect(TeamType::cases())
-                ->map(fn (TeamType $type) => ['value' => $type->value, 'label' => ucfirst($type->value)])
-                ->values(),
-            'matchStatuses' => collect(MatchStatus::cases())
-                ->map(fn (MatchStatus $status) => [
-                    'value' => $status->value,
-                    'label' => str_replace('_', ' ', ucfirst($status->value)),
-                ])
-                ->values(),
-            'canManageTournamentTeams' => Gate::forUser($user)->allows('create', [TournamentTeam::class, $tournament]),
-            'canManageMatches' => Gate::forUser($user)->allows('create', [TournamentMatch::class, $tournament]),
             'permissions' => $user->toTeamPermissions($team),
             'availableRoles' => TeamRole::assignable(),
         ]);

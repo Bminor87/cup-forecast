@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Domain\Tournaments\Models\Tournament;
+use App\Domain\Tournaments\Models\TournamentTeam;
 use App\Domain\Tournaments\Policies\TournamentPolicy;
+use App\Domain\Tournaments\Policies\TournamentTeamPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Tournament::class, TournamentPolicy::class);
+        Gate::policy(TournamentTeam::class, TournamentTeamPolicy::class);
 
         $this->configureDefaults();
     }
